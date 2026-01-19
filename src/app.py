@@ -62,54 +62,28 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
-    # Sports related activities
-    activities["Soccer Team"] = {
-        "description": "Join the school soccer team and compete in local leagues",
-        "schedule": "Wednesdays and Fridays, 4:00 PM - 5:30 PM",
-        "max_participants": 18,
-        "participants": []
-    }       
-    activities["Basketball Club"] = {
-        "description": "Practice basketball skills and play friendly matches",
-        "schedule": "Tuesdays, 5:00 PM - 6:30 PM",
-        "max_participants": 15,
-        "participants": []
-    }
-
-    # Artistic activities
-    activities["Art Club"] = {
-        "description": "Explore painting, drawing, and other visual arts",
-        "schedule": "Thursdays, 3:30 PM - 5:00 PM",
-        "max_participants": 16,
-        "participants": []
-    }
-    activities["Drama Society"] = {
-        "description": "Participate in acting, stage production, and theater performances",
-        "schedule": "Mondays, 4:00 PM - 5:30 PM",
-        "max_participants": 20,
-        "participants": []
-    }
-
-    # Intellectual activities
-    activities["Math Olympiad"] = {
-        "description": "Prepare for math competitions and solve challenging problems",
-        "schedule": "Fridays, 2:00 PM - 3:30 PM",
-        "max_participants": 10,
-        "participants": []
-    }
-    activities["Debate Club"] = {
-        "description": "Develop public speaking and argumentation skills",
-        "schedule": "Wednesdays, 3:30 PM - 5:00 PM",
-        "max_participants": 14,
-        "participants": []
-    }
-
-# Validate student is not already signed up
+    # Validate student is not already signed up
     if email in activity["participants"]:
         raise HTTPException(status_code=400, detail="Student already signed up for this activity")
-
-
 
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
+# Unregister endpoint
+from fastapi import Request
+
+@app.post("/unregister")
+async def unregister_participant(request: Request):
+    data = await request.json()
+    activity_name = data.get("activity")
+    email = data.get("email")
+    if not activity_name or not email:
+        raise HTTPException(status_code=400, detail="Missing activity or email")
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    activity = activities[activity_name]
+    if email not in activity["participants"]:
+        raise HTTPException(status_code=404, detail="Participant not found in activity")
+    activity["participants"].remove(email)
+    return {"success": True, "message": f"Unregistered {email} from {activity_name}"}
